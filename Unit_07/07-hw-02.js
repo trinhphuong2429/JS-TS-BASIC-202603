@@ -1,115 +1,104 @@
 class Cart {
-    #items = [];
+    #items = []
     discountPercent  = 0;
 
 addItem(item){
-
-    const name = item.name.trim().toLowerCase();
-    const  isDuplicate = this.#items.find(product => product.name.trim().toLowerCase() === name)
+    const normalizedItem = {
+        ...item,
+        name: item.name.trim().toLowerCase()
+    }
+    const isDuplicate = this.#items.find(itemInCart => itemInCart.name === normalizedItem.name)
     if(isDuplicate){
-        isDuplicate.quantity += item.quantity;
+        isDuplicate.quantity += normalizedItem.quantity;
         return {
         success: true,
         message: "Thêm số lượng sản phẩm thành công"
         };
     }
-
-    if(name === ""){
+    if(normalizedItem.name === ""){
         return {
-            success: false,
-            message: "Name rỗng"
-        };
+        success: false,
+        message: "Tên sản phẩm rỗng"
+        };  
+    }
+    if(normalizedItem.quantity <= 0 || normalizedItem.price <= 0){
+        return {
+        success: false,
+        message: "Tên sản phẩm rỗng"
+        };   
     }
 
-    if(item.quantity <= 0 || item.price <= 0){
-        return {
-            success: false,
-            message: "không hợp lệ"
-        };
-    }
-
-    this.#items.push(item);
+    this.#items.push(normalizedItem)
     return {
         success: true,
-        message: "Thêm sản phẩm thành công"};
-    
-
+        message: "Thêm sản phẩm thành công"
+        };
 }
 removeItem(name){
-    const cleanName = name.trim().toLowerCase();
-    this.#items =  this.#items.filter(product => product.name.trim().toLowerCase() !== cleanName)
+    const clearName = name.trim().toLowerCase()
+    this.#items = this.#items.filter(itemInCart => itemInCart.name.trim().toLowerCase() !== clearName)
 }
-
 getSubtotal(){
-    const total = this.#items.reduce((total, item) => {
-        return total + (item.price * item.quantity)
-    },0);
-    return total;
+    const originalTotal = this.#items.reduce((originalTotal, itemInCart) => {
+        return originalTotal + (itemInCart.price * itemInCart.quantity)
+    },0)
+    return originalTotal;
 }
-
 applyCoupon(code){
-
-    const cleanCodeDiscount = code.trim().toUpperCase();
-
-    if(cleanCodeDiscount === "SALE10"){
-        this.discountPercent = 10;
-        return true;
+    const codeClean = code.trim().toUpperCase()
+    if(codeClean === "SALE10"){
+        this.discountPercent = 10; 
+        return true
     }
-    else if (cleanCodeDiscount === "SALE20"){
-        this.discountPercent = 20;
-        return true;
+    else if(codeClean === "SALE20"){
+        this.discountPercent = 20; 
+        return true
     }
     else{
-        return false;
+        return false
     }
 }
 checkout(){
-    const subtotal = this.getSubtotal();
-    const discount = subtotal / 100 * this.discountPercent;
-    const total =  subtotal - discount;
-
-    return { 
-    items: this.#items,   
-    subtotal: subtotal,
-    discount: discount,
-    total: total
+    const subtotal = this.getSubtotal()
+    const discount = subtotal / 100 * this.discountPercent
+    const total = subtotal - discount
+    return {
+        items: this.#items,
+        subtotal,
+        discount,
+        total
     }
 }
 }
 
 class VipCart extends Cart{
-    constructor(memberName) {
+    constructor(memberName){
         super();
         this.memberName = memberName;
     }
-
     applyCoupon(code){
         const result = super.applyCoupon(code);
-
-        if (result) {
-            return true;
+        if(result){
+            return true
         }
-
-        const cleanCodeDiscount = code.trim().toUpperCase();
-        if(cleanCodeDiscount === "VIP30"){
+        const cleanCode = code.trim().toUpperCase()
+        if(cleanCode === "VIP30"){
             this.discountPercent = 30;
             return true;
-        }
-        else{
+        }else{
             return false;
         }
     }
-
     checkout(){
-        const billOriginal = super.checkout()
-        return {
-            ... billOriginal,
+        const originalBill = super.checkout();
+        return{
+            ...originalBill,
             memberName: this.memberName,
             cartType: "VIP"
         }
     }
-}
 
+}
 const cart = new VipCart("Neko");
 
 console.log(
